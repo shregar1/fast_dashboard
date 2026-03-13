@@ -1,32 +1,29 @@
 """
-fastmvc_dashboards
+fastmvc_dashboards – Dashboards extension for FastMVC.
 
-Dashboards extension for FastMVC.
-
-This package re-exports the composite DashboardRouter and individual
-dashboard routers from the existing monolithic FastMVC codebase.
+Requires the host app to provide: configurations.*, core.datastores,
+start_utils (db_session, redis_session), core.tenancy, services.secrets,
+services.workflows, and related modules. Use within a FastMVC application.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter
-
-from core.dashboard.router import router as DashboardRouter  # type: ignore
-from core.health.dashboard import router as HealthDashboardRouter  # type: ignore
-from core.api_dashboard import ApiDashboardRouter  # type: ignore
-from core.queues_dashboard import QueuesDashboardRouter  # type: ignore
-from core.tenants_dashboard import TenantsDashboardRouter  # type: ignore
-from core.secrets_dashboard import SecretsDashboardRouter  # type: ignore
-from core.workflows_dashboard import WorkflowsDashboardRouter  # type: ignore
+from .api_dashboard import ApiDashboardRouter, EndpointSample, register_endpoint_sample
+from .router import router as DashboardRouter
+from .health import HealthDashboardRouter
+from .queues_dashboard import QueuesDashboardRouter
+from .secrets_dashboard import SecretsDashboardRouter
+from .tenants_dashboard import TenantsDashboardRouter
+from .workflows_dashboard import WorkflowsDashboardRouter
 
 __all__ = [
-    "APIRouter",
-    "DashboardRouter",
-    "HealthDashboardRouter",
     "ApiDashboardRouter",
+    "DashboardRouter",
+    "EndpointSample",
+    "HealthDashboardRouter",
     "QueuesDashboardRouter",
-    "TenantsDashboardRouter",
+    "register_endpoint_sample",
     "SecretsDashboardRouter",
+    "TenantsDashboardRouter",
     "WorkflowsDashboardRouter",
 ]
-
