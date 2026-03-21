@@ -7,7 +7,7 @@ Requires ``PyJWT`` (``pip install PyJWT`` or ``fastmvc_dashboards[metabase]``).
 from __future__ import annotations
 
 import time
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 
 class MetabaseEmbedProvider:
@@ -34,6 +34,8 @@ class MetabaseEmbedProvider:
         resource_id: str,
         ttl_seconds: int,
         params: Optional[dict[str, Any]] = None,
+        theme: Optional[Literal["light", "dark"]] = None,
+        locale: Optional[str] = None,
     ) -> str:
         try:
             import jwt
@@ -48,12 +50,20 @@ class MetabaseEmbedProvider:
             raise ValueError("Metabase resource_id must be a numeric id string") from exc
 
         now = int(time.time())
+        merged_params: dict[str, Any] = dict(params or {})
+        if locale:
+            merged_params.setdefault("_locale", locale)
         payload: dict[str, Any] = {
             "resource": {self._resource_key: rid},
-            "params": dict(params or {}),
+            "params": merged_params,
             "exp": now + int(ttl_seconds),
         }
         token = jwt.encode(payload, self._secret, algorithm="HS256")
         if isinstance(token, bytes):
             token = token.decode("utf-8")
-        return f"{self._site}/embed/{self._resource_key}/{token}"
+        url = f"{self._site}/embed/{self._resource_key}/{token}"
+        if theme == "dark":
+            url += "#theme=night"
+        elif theme == "light":
+            url += "#theme=day"
+        return url

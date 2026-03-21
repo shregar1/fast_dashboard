@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-03-21
+
+### Added
+
+- **`sign_embed_url`**: optional ``tid`` (token id), ``theme``, ``locale`` query params (signed).
+- **`verify_signed_embed_url`**: optional ``revocation`` (:class:`EmbedRevocationChecker`); **`InMemoryEmbedRevocationList`** (`embed_revocation.py`).
+- **`EmbedThemeParams`**, **`theme_to_extra_params`** (`embed_theme.py`).
+- **`GrafanaEmbedProvider`**: optional ``theme``, ``locale``, ``token_id`` passed into signing.
+- **`MetabaseEmbedProvider`**: optional ``theme`` (``#theme=night`` / ``#theme=day``) and ``locale`` (JWT ``params._locale``).
+- **`LookerEmbedProvider`**, **`PowerBIEmbedProvider`** — stubs raising ``NotImplementedError`` with README recipes.
+
 ## [0.2.0] - 2026-03-21
 
 ### Added

@@ -1,7 +1,7 @@
 [project]
 name = "fastmvc_dashboards"
-version = "0.2.0"
-description = "Dashboards for FastMVC: embed URL signing, Metabase/Grafana providers, routers."
+version = "0.3.0"
+description = "Dashboards for FastMVC: embed signing, revocation, theme params, Metabase/Grafana/Looker/PowerBI stubs, routers."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

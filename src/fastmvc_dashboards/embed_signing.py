@@ -12,7 +12,10 @@ import hmac
 import secrets
 import time
 import urllib.parse
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from .embed_revocation import EmbedRevocationChecker
 
 
 def _canonical_query(params: dict[str, str]) -> str:
@@ -31,11 +34,17 @@ def sign_embed_url(
     ttl_seconds: int,
     *,
     extra_params: Optional[dict[str, str]] = None,
+    token_id: Optional[str] = None,
+    theme: Optional[str] = None,
+    locale: Optional[str] = None,
 ) -> str:
     """
     Append ``exp`` and ``sig`` to ``url`` (merging any existing query string).
 
     ``ttl_seconds`` is added to the current time to set ``exp``.
+
+    * *token_id* — optional ``tid`` query param (signed) for revocation lists.
+    * *theme* / *locale* — optional ``theme`` / ``locale`` query params (e.g. Grafana ``theme=dark``).
     """
     parsed = urllib.parse.urlparse(url)
     path = parsed.path or "/"
@@ -47,6 +56,12 @@ def sign_embed_url(
     merged["exp"] = str(exp)
     if extra_params:
         merged.update({k: str(v) for k, v in extra_params.items()})
+    if token_id is not None:
+        merged["tid"] = str(token_id)
+    if theme is not None:
+        merged["theme"] = str(theme)
+    if locale is not None:
+        merged["locale"] = str(locale)
     msg = _signing_message(path, merged)
     sig = hmac.new(secret, msg, hashlib.sha256).hexdigest()
     merged["sig"] = sig
@@ -56,10 +71,17 @@ def sign_embed_url(
     )
 
 
-def verify_signed_embed_url(url: str, secret: bytes) -> Optional[dict[str, str]]:
+def verify_signed_embed_url(
+    url: str,
+    secret: bytes,
+    *,
+    revocation: Optional["EmbedRevocationChecker"] = None,
+) -> Optional[dict[str, str]]:
     """
     Verify ``sig`` and ``exp`` on ``url``. Returns all query parameters (including ``exp``)
-    if valid, or ``None`` if missing params, bad signature, or expired.
+    if valid, or ``None`` if missing params, bad signature, expired, or revoked ``tid``.
+
+    * *revocation* — if set, rejects URLs whose ``tid`` was :meth:`EmbedRevocationChecker.is_revoked`.
     """
     parsed = urllib.parse.urlparse(url)
     path = parsed.path or "/"
@@ -79,5 +101,8 @@ def verify_signed_embed_url(url: str, secret: bytes) -> Optional[dict[str, str]]
     msg = _signing_message(path, params)
     expected = hmac.new(secret, msg, hashlib.sha256).hexdigest()
     if not secrets.compare_digest(expected, sig):
+        return None
+    tid = params.get("tid")
+    if tid is not None and revocation is not None and revocation.is_revoked(tid):
         return None
     return params
