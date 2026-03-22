@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import secrets
 import time
 import urllib.parse
 from typing import TYPE_CHECKING, Optional
@@ -100,7 +99,7 @@ def verify_signed_embed_url(
         return None
     msg = _signing_message(path, params)
     expected = hmac.new(secret, msg, hashlib.sha256).hexdigest()
-    if not secrets.compare_digest(expected, sig):
+    if not hmac.compare_digest(expected, sig):
         return None
     tid = params.get("tid")
     if tid is not None and revocation is not None and revocation.is_revoked(tid):
