@@ -13,15 +13,45 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from fastapi import APIRouter, Request, Response
-from prometheus_client import (
-    Counter,
-    Gauge,
-    Histogram,
-    Info,
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-    CollectorRegistry,
-)
+
+# Try to import prometheus_client, fallback to stubs if not available
+try:
+    from prometheus_client import (
+        Counter,
+        Gauge,
+        Histogram,
+        Info,
+        generate_latest,
+        CONTENT_TYPE_LATEST,
+        CollectorRegistry,
+    )
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+    # Stub classes
+    class CollectorRegistry:
+        pass
+    class Counter:
+        def __init__(self, *args, **kwargs): pass
+        def labels(self, **kwargs): return self
+        def inc(self, *args, **kwargs): pass
+        def observe(self, *args, **kwargs): pass
+    class Gauge:
+        def __init__(self, *args, **kwargs): pass
+        def labels(self, **kwargs): return self
+        def set(self, *args, **kwargs): pass
+        def inc(self, *args, **kwargs): pass
+        def dec(self, *args, **kwargs): pass
+    class Histogram:
+        def __init__(self, *args, **kwargs): pass
+        def labels(self, **kwargs): return self
+        def observe(self, *args, **kwargs): pass
+    class Info:
+        def __init__(self, *args, **kwargs): pass
+        def info(self, *args, **kwargs): pass
+    def generate_latest(*args, **kwargs):
+        return b"# prometheus_client not installed"
+    CONTENT_TYPE_LATEST = "text/plain"
 
 
 # Custom registry for our metrics
