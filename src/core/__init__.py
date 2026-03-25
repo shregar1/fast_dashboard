@@ -9,7 +9,68 @@ This module provides enterprise-ready features for:
 - Metrics (Prometheus)
 - Webhooks
 - Database Management
+- Smart Caching (cache-aside, stale-while-revalidate)
+- N+1 Query Detection
+- Distributed Tracing with Cost Attribution
+- Field-Level Encryption
 """
+
+# New P0 Features
+from fast_dashboards.core.smart_cache import (
+    SmartCacheManager,
+    CacheConfig,
+    CacheEntry,
+    CacheStrategy,
+    InvalidationEvent,
+    InMemoryCacheBackend,
+    CacheInvalidator,
+    smart_cache,
+    cache_invalidator,
+)
+from fast_dashboards.core.nplus1_detector import (
+    NPlus1Detector,
+    NPlus1Pattern,
+    NPlus1Severity,
+    QueryContext,
+    QueryInfo,
+    BatchLoader,
+    RelationshipPrefetch,
+    detect_nplus1,
+    detector,
+    enable_sqlalchemy_instrumentation,
+    PerformanceWarning,
+)
+from fast_dashboards.core.tracing import (
+    Tracer,
+    TracingConfig,
+    Span,
+    SpanKind,
+    SpanStatus,
+    SpanEvent,
+    CostBreakdown,
+    SpanExporter,
+    ConsoleSpanExporter,
+    InMemorySpanExporter,
+    APICostTracker,
+    DatabaseCostTracker,
+    tracer,
+    trace_endpoint,
+)
+from fast_dashboards.core.encryption import (
+    Encrypted,
+    EncryptedString,
+    FieldEncryption,
+    field_encryption,
+    ModelEncryption,
+    model_encryption,
+    MasterKeyProvider,
+    EncryptionType,
+    EncryptedFieldConfig,
+    encrypted_field,
+    SearchableEncryption,
+    searchable_encryption,
+    setup_encryption,
+)
 
 from fast_dashboards.core.auth import (
     AuthManager,
@@ -190,6 +251,57 @@ __all__ = [
     "TenantStore",
     "DatabaseSession",
     "RedisSession",
+    # Smart Cache
+    "SmartCacheManager",
+    "smart_cache",
+    "CacheConfig",
+    "CacheEntry",
+    "CacheStrategy",
+    "InvalidationEvent",
+    "InMemoryCacheBackend",
+    "CacheInvalidator",
+    "cache_invalidator",
+    # N+1 Detection
+    "NPlus1Detector",
+    "detector",
+    "detect_nplus1",
+    "NPlus1Pattern",
+    "NPlus1Severity",
+    "QueryContext",
+    "QueryInfo",
+    "BatchLoader",
+    "RelationshipPrefetch",
+    "enable_sqlalchemy_instrumentation",
+    "PerformanceWarning",
+    # Tracing
+    "Tracer",
+    "tracer",
+    "TracingConfig",
+    "Span",
+    "SpanKind",
+    "SpanStatus",
+    "SpanEvent",
+    "CostBreakdown",
+    "SpanExporter",
+    "ConsoleSpanExporter",
+    "InMemorySpanExporter",
+    "APICostTracker",
+    "DatabaseCostTracker",
+    "trace_endpoint",
+    # Encryption
+    "Encrypted",
+    "EncryptedString",
+    "FieldEncryption",
+    "field_encryption",
+    "ModelEncryption",
+    "model_encryption",
+    "MasterKeyProvider",
+    "EncryptionType",
+    "EncryptedFieldConfig",
+    "encrypted_field",
+    "SearchableEncryption",
+    "searchable_encryption",
+    "setup_encryption",
 ]
 
 __version__ = "0.4.0"

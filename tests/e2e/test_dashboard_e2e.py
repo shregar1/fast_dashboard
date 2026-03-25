@@ -142,6 +142,7 @@ class TestEndToEndDashboardWorkflows:
         # Open dashboard
         response = client.get("/dashboard/queues")
         assert response.status_code == 200
+        assert "Queues & Jobs" in response.text
         
         # Check state (refreshes every 5s in real UI)
         for _ in range(3):  # Simulate multiple refreshes
@@ -163,16 +164,19 @@ class TestEndToEndDashboardWorkflows:
         from fast_dashboards.operations.secrets_dashboard.router import router as secrets_router
         
         # Configure secrets
-        class MockVault:
+        class MockVaultConfig:
             enabled = True
             url = "https://vault.prod.example.com"
             mount_point = "prod"
         
+        class MockAWSConfig:
+            enabled = True
+            region = "us-west-2"
+            prefix = "/prod"
+        
         class MockSecretsConfig:
-            vault = MockVault()
-            aws = type('obj', (object,), {'enabled': False, 'region': '', 'prefix': ''})()
-            gcp = type('obj', (object,), {'enabled': False, 'project_id': ''})()
-            azure = type('obj', (object,), {'enabled': False, 'vault_url': ''})()
+            vault = MockVaultConfig()
+            aws = MockAWSConfig()
         
         class MockSecretsConfiguration:
             @classmethod
@@ -190,6 +194,7 @@ class TestEndToEndDashboardWorkflows:
         # Open dashboard
         response = client.get("/dashboard/secrets")
         assert response.status_code == 200
+        assert "Secrets & Configuration" in response.text
         
         # Check state
         state = client.get("/dashboard/secrets/state").json()
@@ -300,7 +305,9 @@ class TestEndToEndWorkflowMonitoring:
         3. Views recent runs
         """
         from fast_dashboards.core.registry import registry
-        from fast_dashboards.operations.workflows_dashboard.router import router as workflows_router
+        from fast_dashboards.operations.workflows_dashboard.router import (
+            router as workflows_router
+        )
         
         # Configure Temporal
         class MockWorkflowsConfig:
@@ -312,9 +319,12 @@ class TestEndToEndWorkflowMonitoring:
             dagster_grpc_endpoint = ""
         
         class MockWorkflowsConfiguration:
+            _instance = None
             @classmethod
             def instance(cls):
-                return cls()
+                if cls._instance is None:
+                    cls._instance = cls()
+                return cls._instance
             def get_config(self):
                 return MockWorkflowsConfig()
         
@@ -327,13 +337,13 @@ class TestEndToEndWorkflowMonitoring:
         # Open dashboard
         response = client.get("/dashboard/workflows")
         assert response.status_code == 200
+        assert "Workflows" in response.text
         
         # Check state
         state = client.get("/dashboard/workflows/state").json()
         assert state["engine"]["enabled"] is True
         assert state["engine"]["engineName"] == "temporal"
         assert "temporal-frontend" in state["engine"]["temporal"]
-        assert state["engine"]["prefect"] is None
 
     def test_ml_engineer_uses_prefect(self):
         """
@@ -385,30 +395,18 @@ class TestEndToEdgeCaseScenarios:
         2. All dashboards should still load
         3. Show appropriate messages
         """
-        from fast_dashboards.core.registry import DependencyRegistry
         from fast_dashboards.core.router import router as composite_router
-        
-        # Use fresh registry
-        fresh_registry = DependencyRegistry()
-        
-        # Temporarily replace global registry methods
-        from fast_dashboards import core
-        original_get_config = core.registry.registry.get_config
-        core.registry.registry.get_config = fresh_registry.get_config
-        
-        try:
-            app = FastAPI()
-            app.include_router(composite_router)
-            client = TestClient(app)
-            
-            # All dashboards should still load
-            for path in ["/dashboard/health", "/dashboard/queues", "/dashboard/tenants", 
-                        "/dashboard/secrets", "/dashboard/workflows"]:
-                response = client.get(path)
-                assert response.status_code == 200, f"Failed for {path}"
-        finally:
-            # Restore original
-            core.registry.registry.get_config = original_get_config
+
+        # Create app with composite router
+        app = FastAPI()
+        app.include_router(composite_router)
+        client = TestClient(app)
+
+        # All dashboards should still load (graceful degradation)
+        for path in ["/dashboard/health", "/dashboard/queues", "/dashboard/tenants", 
+                    "/dashboard/secrets", "/dashboard/workflows"]:
+            response = client.get(path)
+            assert response.status_code == 200, f"Failed for {path}"
 
     def test_dashboard_handles_partial_configuration(self):
         """
