@@ -14,7 +14,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from fast_dashboards.core.seo import render_dashboard_inline_head
+from ...core.seo import render_dashboard_inline_head
 
 from .registry import EndpointSample, get_endpoint_sample, list_endpoint_samples
 

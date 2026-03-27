@@ -131,7 +131,7 @@ def _check_redis() -> Dict[str, Any]:
     except Exception as exc:
         logger.error(f"Redis health check failed: {exc}")
         status = "unhealthy"
-        message = str(exc)[:50]
+        message = _truncate_text(f"{exc}", 50)
         color = "#ef4444"
     return {
         "name": "Redis",
@@ -200,7 +200,7 @@ def _check_mongo() -> Dict[str, Any]:
             "key": "mongo",
             "enabled": True,
             "status": "unhealthy",
-            "message": str(exc)[:50],
+            "message": _truncate_text(f"{exc}", 50),
             "icon": icon,
             "color": "#ef4444",
         }
@@ -264,7 +264,7 @@ def _check_cassandra() -> Dict[str, Any]:
             "key": "cassandra",
             "enabled": True,
             "status": "unhealthy",
-            "message": str(exc)[:50],
+            "message": _truncate_text(f"{exc}", 50),
             "icon": icon,
             "color": "#ef4444",
         }
@@ -326,7 +326,7 @@ def _check_scylla() -> Dict[str, Any]:
             "key": "scylla",
             "enabled": True,
             "status": "unhealthy",
-            "message": str(exc)[:50],
+            "message": _truncate_text(f"{exc}", 50),
             "icon": icon,
             "color": "#ef4444",
         }
@@ -386,7 +386,7 @@ def _check_dynamo() -> Dict[str, Any]:
             "key": "dynamo",
             "enabled": True,
             "status": "unhealthy",
-            "message": str(exc)[:50],
+            "message": _truncate_text(f"{exc}", 50),
             "icon": icon,
             "color": "#ef4444",
         }
@@ -448,7 +448,7 @@ def _check_cosmos() -> Dict[str, Any]:
             "key": "cosmos",
             "enabled": True,
             "status": "unhealthy",
-            "message": str(exc)[:50],
+            "message": _truncate_text(f"{exc}", 50),
             "icon": icon,
             "color": "#ef4444",
         }
@@ -520,7 +520,7 @@ def _check_elasticsearch() -> Dict[str, Any]:
             "key": "elasticsearch",
             "enabled": True,
             "status": "unhealthy",
-            "message": str(exc)[:50],
+            "message": _truncate_text(f"{exc}", 50),
             "icon": icon,
             "color": "#ef4444",
         }
