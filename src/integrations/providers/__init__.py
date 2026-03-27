@@ -1,6 +1,4 @@
-"""
-Dashboard embed providers (Metabase, Grafana, …).
-"""
+"""Dashboard embed providers (Metabase, Grafana, …)."""
 
 from __future__ import annotations
 

@@ -1,5 +1,4 @@
-"""
-Section layout for :mod:`fast_dashboards` (aligned with ``fast_platform.taxonomy``).
+"""Section layout for :mod:`fast_dashboards` (aligned with ``fast_platform.taxonomy``).
 
 - **core** — embed signing/revocation/theme, layout, composite router
 - **integrations** — BI embed providers (Metabase, Grafana, …)
@@ -16,6 +15,8 @@ __all__ = ["DashboardSection", "SECTION_SUBPACKAGES"]
 
 
 class DashboardSection(str, Enum):
+    """Represents the DashboardSection class."""
+
     CORE = "core"
     INTEGRATIONS = "integrations"
     OPERATIONS = "operations"

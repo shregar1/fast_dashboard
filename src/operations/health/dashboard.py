@@ -1,5 +1,4 @@
-"""
-Visual health dashboard for core services with beautiful UI.
+"""Visual health dashboard for core services with beautiful UI.
 
 Provides a stunning HTML dashboard at `/dashboard/health` showing the
 status of enabled infrastructure services.
@@ -34,10 +33,24 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 
 def _bool_env(name: str, default: str = "false") -> bool:
+    """Execute _bool_env operation.
+
+    Args:
+        name: The name parameter.
+        default: The default parameter.
+
+    Returns:
+        The result of the operation.
+    """
     return os.getenv(name, default).strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _check_postgres() -> Dict[str, Any]:
+    """Execute _check_postgres operation.
+
+    Returns:
+        The result of the operation.
+    """
     db_session = registry.get_db_session()
     enabled = db_session is not None
     status = "skipped"
@@ -45,7 +58,15 @@ def _check_postgres() -> Dict[str, Any]:
     icon = "🐘"
     color = "#94a3b8"
     if not enabled:
-        return {"name": "PostgreSQL", "key": "postgres", "enabled": False, "status": status, "message": message, "icon": icon, "color": color}
+        return {
+            "name": "PostgreSQL",
+            "key": "postgres",
+            "enabled": False,
+            "status": status,
+            "message": message,
+            "icon": icon,
+            "color": color,
+        }
 
     try:
         db_session.execute(text("SELECT 1"))
@@ -55,12 +76,25 @@ def _check_postgres() -> Dict[str, Any]:
     except Exception as exc:
         logger.error(f"PostgreSQL health check failed: {exc}")
         status = "unhealthy"
-        message = str(exc)[:50]
+        message = f"{exc}"[:50]
         color = "#ef4444"
-    return {"name": "PostgreSQL", "key": "postgres", "enabled": True, "status": status, "message": message, "icon": icon, "color": color}
+    return {
+        "name": "PostgreSQL",
+        "key": "postgres",
+        "enabled": True,
+        "status": status,
+        "message": message,
+        "icon": icon,
+        "color": color,
+    }
 
 
 def _check_redis() -> Dict[str, Any]:
+    """Execute _check_redis operation.
+
+    Returns:
+        The result of the operation.
+    """
     redis_session = registry.get_redis_session()
     enabled = redis_session is not None
     status = "skipped"
@@ -68,7 +102,15 @@ def _check_redis() -> Dict[str, Any]:
     icon = "⚡"
     color = "#94a3b8"
     if not enabled:
-        return {"name": "Redis", "key": "redis", "enabled": False, "status": status, "message": message, "icon": icon, "color": color}
+        return {
+            "name": "Redis",
+            "key": "redis",
+            "enabled": False,
+            "status": status,
+            "message": message,
+            "icon": icon,
+            "color": color,
+        }
 
     try:
         if redis_session.ping():
@@ -84,141 +126,415 @@ def _check_redis() -> Dict[str, Any]:
         status = "unhealthy"
         message = str(exc)[:50]
         color = "#ef4444"
-    return {"name": "Redis", "key": "redis", "enabled": True, "status": status, "message": message, "icon": icon, "color": color}
+    return {
+        "name": "Redis",
+        "key": "redis",
+        "enabled": True,
+        "status": status,
+        "message": message,
+        "icon": icon,
+        "color": color,
+    }
 
 
 def _check_mongo() -> Dict[str, Any]:
+    """Execute _check_mongo operation.
+
+    Returns:
+        The result of the operation.
+    """
     enabled = _bool_env("MONGO_ENABLED", "false")
     icon = "🍃"
     color = "#94a3b8"
     if not enabled:
-        return {"name": "MongoDB", "key": "mongo", "enabled": False, "status": "skipped", "message": "Disabled", "icon": icon, "color": color}
+        return {
+            "name": "MongoDB",
+            "key": "mongo",
+            "enabled": False,
+            "status": "skipped",
+            "message": "Disabled",
+            "icon": icon,
+            "color": color,
+        }
 
     try:
         MongoDocumentStore = _get_datastore_class("MongoDocumentStore")
         if MongoDocumentStore is None:
-            return {"name": "MongoDB", "key": "mongo", "enabled": True, "status": "unhealthy", "message": "Store not available", "icon": icon, "color": "#ef4444"}
-        store = MongoDocumentStore(uri=os.getenv("MONGO_URI", "mongodb://localhost:27017"), database=os.getenv("MONGO_DATABASE", "admin"))
+            return {
+                "name": "MongoDB",
+                "key": "mongo",
+                "enabled": True,
+                "status": "unhealthy",
+                "message": "Store not available",
+                "icon": icon,
+                "color": "#ef4444",
+            }
+        store = MongoDocumentStore(
+            uri=os.getenv("MONGO_URI", "mongodb://localhost:27017"),
+            database=os.getenv("MONGO_DATABASE", "admin"),
+        )
         store.connect()
         db = store.get_database()
         db.command("ping")
         store.disconnect()
-        return {"name": "MongoDB", "key": "mongo", "enabled": True, "status": "healthy", "message": "Connected", "icon": icon, "color": "#10b981"}
+        return {
+            "name": "MongoDB",
+            "key": "mongo",
+            "enabled": True,
+            "status": "healthy",
+            "message": "Connected",
+            "icon": icon,
+            "color": "#10b981",
+        }
     except Exception as exc:
         logger.error(f"MongoDB health check failed: {exc}")
-        return {"name": "MongoDB", "key": "mongo", "enabled": True, "status": "unhealthy", "message": str(exc)[:50], "icon": icon, "color": "#ef4444"}
+        return {
+            "name": "MongoDB",
+            "key": "mongo",
+            "enabled": True,
+            "status": "unhealthy",
+            "message": str(exc)[:50],
+            "icon": icon,
+            "color": "#ef4444",
+        }
 
 
 def _check_cassandra() -> Dict[str, Any]:
+    """Execute _check_cassandra operation.
+
+    Returns:
+        The result of the operation.
+    """
     enabled = _bool_env("CASSANDRA_ENABLED", "false")
     icon = "🔱"
     color = "#94a3b8"
     if not enabled:
-        return {"name": "Cassandra", "key": "cassandra", "enabled": False, "status": "skipped", "message": "Disabled", "icon": icon, "color": color}
+        return {
+            "name": "Cassandra",
+            "key": "cassandra",
+            "enabled": False,
+            "status": "skipped",
+            "message": "Disabled",
+            "icon": icon,
+            "color": color,
+        }
 
     try:
         CassandraWideColumnStore = _get_datastore_class("CassandraWideColumnStore")
         if CassandraWideColumnStore is None:
-            return {"name": "Cassandra", "key": "cassandra", "enabled": True, "status": "unhealthy", "message": "Store not available", "icon": icon, "color": "#ef4444"}
-        store = CassandraWideColumnStore(contact_points=os.getenv("CASSANDRA_CONTACT_POINTS", "127.0.0.1").split(","), port=int(os.getenv("CASSANDRA_PORT", "9042")), keyspace=os.getenv("CASSANDRA_KEYSPACE"))
+            return {
+                "name": "Cassandra",
+                "key": "cassandra",
+                "enabled": True,
+                "status": "unhealthy",
+                "message": "Store not available",
+                "icon": icon,
+                "color": "#ef4444",
+            }
+        store = CassandraWideColumnStore(
+            contact_points=os.getenv("CASSANDRA_CONTACT_POINTS", "127.0.0.1").split(
+                ","
+            ),
+            port=int(os.getenv("CASSANDRA_PORT", "9042")),
+            keyspace=os.getenv("CASSANDRA_KEYSPACE"),
+        )
         store.connect()
         store.execute("SELECT release_version FROM system.local")
         store.disconnect()
-        return {"name": "Cassandra", "key": "cassandra", "enabled": True, "status": "healthy", "message": "Connected", "icon": icon, "color": "#10b981"}
+        return {
+            "name": "Cassandra",
+            "key": "cassandra",
+            "enabled": True,
+            "status": "healthy",
+            "message": "Connected",
+            "icon": icon,
+            "color": "#10b981",
+        }
     except Exception as exc:
         logger.error(f"Cassandra health check failed: {exc}")
-        return {"name": "Cassandra", "key": "cassandra", "enabled": True, "status": "unhealthy", "message": str(exc)[:50], "icon": icon, "color": "#ef4444"}
+        return {
+            "name": "Cassandra",
+            "key": "cassandra",
+            "enabled": True,
+            "status": "unhealthy",
+            "message": str(exc)[:50],
+            "icon": icon,
+            "color": "#ef4444",
+        }
 
 
 def _check_scylla() -> Dict[str, Any]:
+    """Execute _check_scylla operation.
+
+    Returns:
+        The result of the operation.
+    """
     enabled = _bool_env("SCYLLA_ENABLED", "false")
     icon = "🌊"
     color = "#94a3b8"
     if not enabled:
-        return {"name": "ScyllaDB", "key": "scylla", "enabled": False, "status": "skipped", "message": "Disabled", "icon": icon, "color": color}
+        return {
+            "name": "ScyllaDB",
+            "key": "scylla",
+            "enabled": False,
+            "status": "skipped",
+            "message": "Disabled",
+            "icon": icon,
+            "color": color,
+        }
 
     try:
         ScyllaWideColumnStore = _get_datastore_class("ScyllaWideColumnStore")
         if ScyllaWideColumnStore is None:
-            return {"name": "ScyllaDB", "key": "scylla", "enabled": True, "status": "unhealthy", "message": "Store not available", "icon": icon, "color": "#ef4444"}
-        store = ScyllaWideColumnStore(contact_points=os.getenv("SCYLLA_CONTACT_POINTS", "127.0.0.1").split(","), port=int(os.getenv("SCYLLA_PORT", "9042")), keyspace=os.getenv("SCYLLA_KEYSPACE"))
+            return {
+                "name": "ScyllaDB",
+                "key": "scylla",
+                "enabled": True,
+                "status": "unhealthy",
+                "message": "Store not available",
+                "icon": icon,
+                "color": "#ef4444",
+            }
+        store = ScyllaWideColumnStore(
+            contact_points=os.getenv("SCYLLA_CONTACT_POINTS", "127.0.0.1").split(","),
+            port=int(os.getenv("SCYLLA_PORT", "9042")),
+            keyspace=os.getenv("SCYLLA_KEYSPACE"),
+        )
         store.connect()
         store.execute("SELECT release_version FROM system.local")
         store.disconnect()
-        return {"name": "ScyllaDB", "key": "scylla", "enabled": True, "status": "healthy", "message": "Connected", "icon": icon, "color": "#10b981"}
+        return {
+            "name": "ScyllaDB",
+            "key": "scylla",
+            "enabled": True,
+            "status": "healthy",
+            "message": "Connected",
+            "icon": icon,
+            "color": "#10b981",
+        }
     except Exception as exc:
         logger.error(f"ScyllaDB health check failed: {exc}")
-        return {"name": "ScyllaDB", "key": "scylla", "enabled": True, "status": "unhealthy", "message": str(exc)[:50], "icon": icon, "color": "#ef4444"}
+        return {
+            "name": "ScyllaDB",
+            "key": "scylla",
+            "enabled": True,
+            "status": "unhealthy",
+            "message": str(exc)[:50],
+            "icon": icon,
+            "color": "#ef4444",
+        }
 
 
 def _check_dynamo() -> Dict[str, Any]:
+    """Execute _check_dynamo operation.
+
+    Returns:
+        The result of the operation.
+    """
     enabled = _bool_env("DYNAMO_ENABLED", "false")
     icon = "📦"
     color = "#94a3b8"
     if not enabled:
-        return {"name": "DynamoDB", "key": "dynamo", "enabled": False, "status": "skipped", "message": "Disabled", "icon": icon, "color": color}
+        return {
+            "name": "DynamoDB",
+            "key": "dynamo",
+            "enabled": False,
+            "status": "skipped",
+            "message": "Disabled",
+            "icon": icon,
+            "color": color,
+        }
 
     try:
         DynamoKeyValueStore = _get_datastore_class("DynamoKeyValueStore")
         if DynamoKeyValueStore is None:
-            return {"name": "DynamoDB", "key": "dynamo", "enabled": True, "status": "unhealthy", "message": "Store not available", "icon": icon, "color": "#ef4444"}
-        store = DynamoKeyValueStore(table_name="healthcheck", region_name=os.getenv("DYNAMO_REGION", "us-east-1"))
+            return {
+                "name": "DynamoDB",
+                "key": "dynamo",
+                "enabled": True,
+                "status": "unhealthy",
+                "message": "Store not available",
+                "icon": icon,
+                "color": "#ef4444",
+            }
+        store = DynamoKeyValueStore(
+            table_name="healthcheck",
+            region_name=os.getenv("DYNAMO_REGION", "us-east-1"),
+        )
         store.connect()
         store.disconnect()
-        return {"name": "DynamoDB", "key": "dynamo", "enabled": True, "status": "healthy", "message": f"Region: {os.getenv('DYNAMO_REGION', 'us-east-1')}", "icon": icon, "color": "#10b981"}
+        return {
+            "name": "DynamoDB",
+            "key": "dynamo",
+            "enabled": True,
+            "status": "healthy",
+            "message": f"Region: {os.getenv('DYNAMO_REGION', 'us-east-1')}",
+            "icon": icon,
+            "color": "#10b981",
+        }
     except Exception as exc:
         logger.error(f"DynamoDB health check failed: {exc}")
-        return {"name": "DynamoDB", "key": "dynamo", "enabled": True, "status": "unhealthy", "message": str(exc)[:50], "icon": icon, "color": "#ef4444"}
+        return {
+            "name": "DynamoDB",
+            "key": "dynamo",
+            "enabled": True,
+            "status": "unhealthy",
+            "message": str(exc)[:50],
+            "icon": icon,
+            "color": "#ef4444",
+        }
 
 
 def _check_cosmos() -> Dict[str, Any]:
+    """Execute _check_cosmos operation.
+
+    Returns:
+        The result of the operation.
+    """
     enabled = _bool_env("COSMOS_ENABLED", "false")
     icon = "🌌"
     color = "#94a3b8"
     if not enabled:
-        return {"name": "Cosmos DB", "key": "cosmos", "enabled": False, "status": "skipped", "message": "Disabled", "icon": icon, "color": color}
+        return {
+            "name": "Cosmos DB",
+            "key": "cosmos",
+            "enabled": False,
+            "status": "skipped",
+            "message": "Disabled",
+            "icon": icon,
+            "color": color,
+        }
 
     try:
         CosmosDocumentStore = _get_datastore_class("CosmosDocumentStore")
         if CosmosDocumentStore is None:
-            return {"name": "Cosmos DB", "key": "cosmos", "enabled": True, "status": "unhealthy", "message": "Store not available", "icon": icon, "color": "#ef4444"}
-        store = CosmosDocumentStore(account_uri=os.getenv("COSMOS_ACCOUNT_URI", ""), account_key=os.getenv("COSMOS_ACCOUNT_KEY", ""), database=os.getenv("COSMOS_DATABASE", "fastmvc"))
+            return {
+                "name": "Cosmos DB",
+                "key": "cosmos",
+                "enabled": True,
+                "status": "unhealthy",
+                "message": "Store not available",
+                "icon": icon,
+                "color": "#ef4444",
+            }
+        store = CosmosDocumentStore(
+            account_uri=os.getenv("COSMOS_ACCOUNT_URI", ""),
+            account_key=os.getenv("COSMOS_ACCOUNT_KEY", ""),
+            database=os.getenv("COSMOS_DATABASE", "fastmvc"),
+        )
         store.connect()
         _ = store.get_database()
         store.disconnect()
-        return {"name": "Cosmos DB", "key": "cosmos", "enabled": True, "status": "healthy", "message": "Connected", "icon": icon, "color": "#10b981"}
+        return {
+            "name": "Cosmos DB",
+            "key": "cosmos",
+            "enabled": True,
+            "status": "healthy",
+            "message": "Connected",
+            "icon": icon,
+            "color": "#10b981",
+        }
     except Exception as exc:
         logger.error(f"Cosmos DB health check failed: {exc}")
-        return {"name": "Cosmos DB", "key": "cosmos", "enabled": True, "status": "unhealthy", "message": str(exc)[:50], "icon": icon, "color": "#ef4444"}
+        return {
+            "name": "Cosmos DB",
+            "key": "cosmos",
+            "enabled": True,
+            "status": "unhealthy",
+            "message": str(exc)[:50],
+            "icon": icon,
+            "color": "#ef4444",
+        }
 
 
 def _check_elasticsearch() -> Dict[str, Any]:
+    """Execute _check_elasticsearch operation.
+
+    Returns:
+        The result of the operation.
+    """
     enabled = _bool_env("ELASTICSEARCH_ENABLED", "false")
     icon = "🔍"
     color = "#94a3b8"
     if not enabled:
-        return {"name": "Elasticsearch", "key": "elasticsearch", "enabled": False, "status": "skipped", "message": "Disabled", "icon": icon, "color": color}
+        return {
+            "name": "Elasticsearch",
+            "key": "elasticsearch",
+            "enabled": False,
+            "status": "skipped",
+            "message": "Disabled",
+            "icon": icon,
+            "color": color,
+        }
 
     try:
         ElasticsearchSearchStore = _get_datastore_class("ElasticsearchSearchStore")
         if ElasticsearchSearchStore is None:
-            return {"name": "Elasticsearch", "key": "elasticsearch", "enabled": True, "status": "unhealthy", "message": "Store not available", "icon": icon, "color": "#ef4444"}
-        hosts = [h.strip() for h in os.getenv("ELASTICSEARCH_HOSTS", "http://localhost:9200").split(",") if h.strip()]
-        store = ElasticsearchSearchStore(hosts=hosts, username=os.getenv("ELASTICSEARCH_USERNAME"), password=os.getenv("ELASTICSEARCH_PASSWORD"))
+            return {
+                "name": "Elasticsearch",
+                "key": "elasticsearch",
+                "enabled": True,
+                "status": "unhealthy",
+                "message": "Store not available",
+                "icon": icon,
+                "color": "#ef4444",
+            }
+        hosts = [
+            h.strip()
+            for h in os.getenv("ELASTICSEARCH_HOSTS", "http://localhost:9200").split(
+                ","
+            )
+            if h.strip()
+        ]
+        store = ElasticsearchSearchStore(
+            hosts=hosts,
+            username=os.getenv("ELASTICSEARCH_USERNAME"),
+            password=os.getenv("ELASTICSEARCH_PASSWORD"),
+        )
         store.connect()
         healthy = store.ping()
         store.disconnect()
         status = "healthy" if healthy else "unhealthy"
         message = "Connected" if healthy else "Ping failed"
         color = "#10b981" if healthy else "#ef4444"
-        return {"name": "Elasticsearch", "key": "elasticsearch", "enabled": True, "status": status, "message": message, "icon": icon, "color": color}
+        return {
+            "name": "Elasticsearch",
+            "key": "elasticsearch",
+            "enabled": True,
+            "status": status,
+            "message": message,
+            "icon": icon,
+            "color": color,
+        }
     except Exception as exc:
         logger.error(f"Elasticsearch health check failed: {exc}")
-        return {"name": "Elasticsearch", "key": "elasticsearch", "enabled": True, "status": "unhealthy", "message": str(exc)[:50], "icon": icon, "color": "#ef4444"}
+        return {
+            "name": "Elasticsearch",
+            "key": "elasticsearch",
+            "enabled": True,
+            "status": "unhealthy",
+            "message": str(exc)[:50],
+            "icon": icon,
+            "color": "#ef4444",
+        }
 
 
 def _gather_services() -> List[Dict[str, Any]]:
-    return [_check_postgres(), _check_redis(), _check_mongo(), _check_cassandra(), _check_scylla(), _check_dynamo(), _check_cosmos(), _check_elasticsearch()]
+    """Execute _gather_services operation.
+
+    Returns:
+        The result of the operation.
+    """
+    return [
+        _check_postgres(),
+        _check_redis(),
+        _check_mongo(),
+        _check_cassandra(),
+        _check_scylla(),
+        _check_dynamo(),
+        _check_cosmos(),
+        _check_elasticsearch(),
+    ]
 
 
 def _get_status_summary(services: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -228,9 +544,15 @@ def _get_status_summary(services: List[Dict[str, Any]]) -> Dict[str, Any]:
     unhealthy = sum(1 for s in services if s["status"] == "unhealthy")
     skipped = sum(1 for s in services if s["status"] == "skipped")
     enabled = sum(1 for s in services if s["enabled"])
-    
-    overall_status = "healthy" if unhealthy == 0 and healthy > 0 else "warning" if unhealthy == 0 else "critical"
-    
+
+    overall_status = (
+        "healthy"
+        if unhealthy == 0 and healthy > 0
+        else "warning"
+        if unhealthy == 0
+        else "critical"
+    )
+
     return {
         "total": total,
         "healthy": healthy,
@@ -238,7 +560,7 @@ def _get_status_summary(services: List[Dict[str, Any]]) -> Dict[str, Any]:
         "skipped": skipped,
         "enabled": enabled,
         "overall_status": overall_status,
-        "health_percent": round((healthy / enabled * 100) if enabled > 0 else 0, 1)
+        "health_percent": round((healthy / enabled * 100) if enabled > 0 else 0.0, 1),
     }
 
 
@@ -247,41 +569,41 @@ async def health_dashboard() -> HTMLResponse:
     """Render a beautiful HTML dashboard showing health status."""
     services = _gather_services()
     summary = _get_status_summary(services)
-    
+
     _head_seo = render_dashboard_inline_head(
         page_title="FastMVC Service Health",
         description="Live health checks for PostgreSQL, Redis, MongoDB, Elasticsearch, Cassandra, Scylla, DynamoDB, and Cosmos DB.",
         path="/dashboard/health",
     )
-    
+
     # Build service cards
     service_cards = []
     for svc in services:
         pulse_animation = "pulse-animation" if svc["status"] == "healthy" else ""
-        status_dot = f"<span class=\"status-dot {pulse_animation}\" style=\"background: {svc['color']}; box-shadow: 0 0 12px {svc['color']};\"></span>"
+        status_dot = f'<span class="status-dot {pulse_animation}" style="background: {svc["color"]}; box-shadow: 0 0 12px {svc["color"]};"></span>'
         card_html = f"""
-        <div class="service-card" data-status="{svc['status']}">
+        <div class="service-card" data-status="{svc["status"]}">
             <div class="service-header">
-                <div class="service-icon">{svc['icon']}</div>
+                <div class="service-icon">{svc["icon"]}</div>
                 <div class="service-info">
-                    <h3>{svc['name']}</h3>
-                    <span class="service-key">{svc['key']}</span>
+                    <h3>{svc["name"]}</h3>
+                    <span class="service-key">{svc["key"]}</span>
                 </div>
                 {status_dot}
             </div>
             <div class="service-body">
-                <div class="status-badge" style="background: {svc['color']}20; color: {svc['color']}; border-color: {svc['color']}40;">
-                    {svc['status'].upper()}
+                <div class="status-badge" style="background: {svc["color"]}20; color: {svc["color"]}; border-color: {svc["color"]}40;">
+                    {svc["status"].upper()}
                 </div>
-                <p class="service-message">{svc['message']}</p>
+                <p class="service-message">{svc["message"]}</p>
             </div>
             <div class="service-footer">
-                <span class="mode-badge">{'Enabled' if svc['enabled'] else 'Disabled'}</span>
+                <span class="mode-badge">{"Enabled" if svc["enabled"] else "Disabled"}</span>
             </div>
         </div>
         """
         service_cards.append(card_html)
-    
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -613,26 +935,26 @@ async def health_dashboard() -> HTMLResponse:
         </header>
         
         <section class="summary-section">
-            <div class="summary-card {summary['overall_status']}">
-                <div class="summary-value">{summary['health_percent']}%</div>
+            <div class="summary-card {summary["overall_status"]}">
+                <div class="summary-value">{summary["health_percent"]}%</div>
                 <div class="summary-label">Health Score</div>
             </div>
             <div class="summary-card healthy">
-                <div class="summary-value">{summary['healthy']}</div>
+                <div class="summary-value">{summary["healthy"]}</div>
                 <div class="summary-label">Healthy</div>
             </div>
             <div class="summary-card critical">
-                <div class="summary-value">{summary['unhealthy']}</div>
+                <div class="summary-value">{summary["unhealthy"]}</div>
                 <div class="summary-label">Unhealthy</div>
             </div>
             <div class="summary-card">
-                <div class="summary-value">{summary['skipped']}</div>
+                <div class="summary-value">{summary["skipped"]}</div>
                 <div class="summary-label">Disabled</div>
             </div>
         </section>
         
         <div class="services-grid">
-            {''.join(service_cards)}
+            {"".join(service_cards)}
         </div>
     </div>
     

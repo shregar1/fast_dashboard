@@ -4,6 +4,11 @@ import os
 
 
 def test_render_seo_head_includes_og_and_robots():
+    """Execute test_render_seo_head_includes_og_and_robots operation.
+
+    Returns:
+        The result of the operation.
+    """
     from fast_dashboards.core.seo import PageSEO, render_seo_head
 
     seo = PageSEO(
@@ -21,6 +26,14 @@ def test_render_seo_head_includes_og_and_robots():
 
 
 def test_canonical_from_env(monkeypatch):
+    """Execute test_canonical_from_env operation.
+
+    Args:
+        monkeypatch: The monkeypatch parameter.
+
+    Returns:
+        The result of the operation.
+    """
     from fast_dashboards.core.seo import default_dashboard_seo, render_seo_head
 
     monkeypatch.setenv("FASTMVC_PUBLIC_BASE_URL", "https://app.example.com")
@@ -31,7 +44,15 @@ def test_canonical_from_env(monkeypatch):
 
 
 def test_robots_txt_helpers():
-    from fast_dashboards.core.seo import robots_txt_private_dashboards, robots_txt_public_site
+    """Execute test_robots_txt_helpers operation.
+
+    Returns:
+        The result of the operation.
+    """
+    from fast_dashboards.core.seo import (
+        robots_txt_private_dashboards,
+        robots_txt_public_site,
+    )
 
     assert "Disallow: /" in robots_txt_private_dashboards()
     assert "Allow: /" in robots_txt_public_site()

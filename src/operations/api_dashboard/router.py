@@ -1,5 +1,4 @@
-"""
-API Activity Dashboard Router.
+"""API Activity Dashboard Router.
 
 Provides a built-in dashboard similar in spirit to /docs and /redoc that
 shows configured APIs along with sample payloads and lets you exercise
@@ -24,6 +23,14 @@ router = APIRouter(prefix="/dashboard/api", tags=["API Dashboard"])
 
 
 def _serialize_sample(sample: EndpointSample) -> Dict[str, Any]:
+    """Execute _serialize_sample operation.
+
+    Args:
+        sample: The sample parameter.
+
+    Returns:
+        The result of the operation.
+    """
     return {
         "key": sample.key,
         "name": sample.name,
@@ -38,8 +45,7 @@ def _serialize_sample(sample: EndpointSample) -> Dict[str, Any]:
 
 @router.get("", response_class=HTMLResponse, summary="API Activity Dashboard")
 async def api_dashboard() -> HTMLResponse:
-    """
-    Render the API dashboard page.
+    """Render the API dashboard page.
 
     The page fetches live data from the same router's JSON endpoints to
     keep the backend logic simple and avoid static assets.
@@ -560,19 +566,22 @@ async def api_dashboard() -> HTMLResponse:
     return HTMLResponse(content=html)
 
 
-@router.get("/endpoints", response_class=JSONResponse, summary="List configured API samples")
+@router.get(
+    "/endpoints", response_class=JSONResponse, summary="List configured API samples"
+)
 async def list_endpoints() -> JSONResponse:
-    """
-    Return the list of registered endpoint samples as JSON.
-    """
+    """Return the list of registered endpoint samples as JSON."""
     samples = list_endpoint_samples()
     return JSONResponse(content=[_serialize_sample(s) for s in samples])
 
 
-@router.post("/test/{key}", response_class=JSONResponse, summary="Run sample request for an endpoint")
+@router.post(
+    "/test/{key}",
+    response_class=JSONResponse,
+    summary="Run sample request for an endpoint",
+)
 async def test_endpoint(key: str, request: Request) -> JSONResponse:
-    """
-    Execute the sample request for the given endpoint key against this API.
+    """Execute the sample request for the given endpoint key against this API.
 
     This uses httpx to send a request back to the same FastAPI instance,
     so it respects middleware and routing exactly as a real client would.
@@ -631,4 +640,3 @@ async def test_endpoint(key: str, request: Request) -> JSONResponse:
             },
             status_code=200,
         )
-

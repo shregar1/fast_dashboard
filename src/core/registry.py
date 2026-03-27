@@ -1,5 +1,4 @@
-"""
-Dependency registry for loose coupling with host application.
+"""Dependency registry for loose coupling with host application.
 
 This module provides a registry pattern that allows the host application
 to register dependencies (database sessions, configuration providers, etc.)
@@ -10,9 +9,10 @@ Example:
     from fast_dashboards.core.registry import registry
     from myapp.config import JobsConfiguration
     registry.register_config("jobs", JobsConfiguration)
-    
+
     # In dashboard (automatically resolved)
     cfg = registry.get_config("jobs")  # Returns host app's configuration
+
 """
 
 from __future__ import annotations
@@ -52,8 +52,7 @@ class RedisSession(Protocol):
 
 
 class DependencyRegistry:
-    """
-    Registry for host application dependencies.
+    """Registry for host application dependencies.
 
     This allows dashboards to work without hard dependencies on
     specific host app modules like 'configurations', 'core.datastores',

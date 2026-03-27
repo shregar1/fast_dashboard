@@ -1,5 +1,4 @@
-"""
-Time-limited signed embed URLs (HMAC-SHA256).
+"""Time-limited signed embed URLs (HMAC-SHA256).
 
 Adds ``exp`` (Unix seconds) and ``sig`` (hex digest) query parameters. Suitable for
 iframes and reverse-proxied dashboard embeds where the secret stays server-side.
@@ -18,11 +17,28 @@ if TYPE_CHECKING:
 
 
 def _canonical_query(params: dict[str, str]) -> str:
+    """Execute _canonical_query operation.
+
+    Args:
+        params: The params parameter.
+
+    Returns:
+        The result of the operation.
+    """
     items = sorted((k, str(v)) for k, v in params.items() if k != "sig")
     return urllib.parse.urlencode(items)
 
 
 def _signing_message(path: str, params: dict[str, str]) -> bytes:
+    """Execute _signing_message operation.
+
+    Args:
+        path: The path parameter.
+        params: The params parameter.
+
+    Returns:
+        The result of the operation.
+    """
     q = _canonical_query(params)
     return f"{path}?{q}".encode("utf-8")
 
@@ -37,8 +53,7 @@ def sign_embed_url(
     theme: Optional[str] = None,
     locale: Optional[str] = None,
 ) -> str:
-    """
-    Append ``exp`` and ``sig`` to ``url`` (merging any existing query string).
+    """Append ``exp`` and ``sig`` to ``url`` (merging any existing query string).
 
     ``ttl_seconds`` is added to the current time to set ``exp``.
 
@@ -76,8 +91,7 @@ def verify_signed_embed_url(
     *,
     revocation: Optional["EmbedRevocationChecker"] = None,
 ) -> Optional[dict[str, str]]:
-    """
-    Verify ``sig`` and ``exp`` on ``url``. Returns all query parameters (including ``exp``)
+    """Verify ``sig`` and ``exp`` on ``url``. Returns all query parameters (including ``exp``)
     if valid, or ``None`` if missing params, bad signature, expired, or revoked ``tid``.
 
     * *revocation* — if set, rejects URLs whose ``tid`` was :meth:`EmbedRevocationChecker.is_revoked`.

@@ -1,6 +1,4 @@
-"""
-Secrets & Configuration Dashboard Router with beautiful UI.
-"""
+"""Secrets & Configuration Dashboard Router with beautiful UI."""
 
 from __future__ import annotations
 
@@ -20,7 +18,7 @@ router = APIRouter(prefix="/dashboard/secrets", tags=["Secrets Dashboard"])
 def _get_secrets_config() -> Optional[Any]:
     """Get secrets configuration via registry."""
     cfg_class = registry.get_config("secrets")
-    if cfg_class and hasattr(cfg_class, 'instance'):
+    if cfg_class and hasattr(cfg_class, "instance"):
         return cfg_class.instance().get_config()
     return None
 
@@ -28,51 +26,85 @@ def _get_secrets_config() -> Optional[Any]:
 def _load_backends_state() -> Dict[str, Any]:
     """Load secrets backends state with visual info."""
     cfg = _get_secrets_config()
-    
+
     backends = {
-        "vault": {"name": "HashiCorp Vault", "icon": "🔐", "color": "#ffd700", "enabled": False, "status": "Not configured"},
-        "aws": {"name": "AWS Secrets Manager", "icon": "☁️", "color": "#ff9900", "enabled": False, "status": "Not configured"},
-        "gcp": {"name": "GCP Secret Manager", "icon": "🔷", "color": "#4285f4", "enabled": False, "status": "Not configured"},
-        "azure": {"name": "Azure Key Vault", "icon": "🔹", "color": "#0078d4", "enabled": False, "status": "Not configured"},
+        "vault": {
+            "name": "HashiCorp Vault",
+            "icon": "🔐",
+            "color": "#ffd700",
+            "enabled": False,
+            "status": "Not configured",
+        },
+        "aws": {
+            "name": "AWS Secrets Manager",
+            "icon": "☁️",
+            "color": "#ff9900",
+            "enabled": False,
+            "status": "Not configured",
+        },
+        "gcp": {
+            "name": "GCP Secret Manager",
+            "icon": "🔷",
+            "color": "#4285f4",
+            "enabled": False,
+            "status": "Not configured",
+        },
+        "azure": {
+            "name": "Azure Key Vault",
+            "icon": "🔹",
+            "color": "#0078d4",
+            "enabled": False,
+            "status": "Not configured",
+        },
     }
-    
+
     if cfg is None:
         return backends
-    
-    vault = getattr(cfg, 'vault', None)
-    if vault and getattr(vault, 'enabled', False):
-        backends["vault"].update({
-            "enabled": True,
-            "url": getattr(vault, 'url', ''),
-            "mountPoint": getattr(vault, 'mount_point', ''),
-            "status": "Connected" if getattr(vault, 'url', None) else "URL missing"
-        })
-    
-    aws = getattr(cfg, 'aws', None)
-    if aws and getattr(aws, 'enabled', False):
-        backends["aws"].update({
-            "enabled": True,
-            "region": getattr(aws, 'region', ''),
-            "prefix": getattr(aws, 'prefix', ''),
-            "status": f"Region: {getattr(aws, 'region', 'N/A')}"
-        })
-    
-    gcp = getattr(cfg, 'gcp', None)
-    if gcp and getattr(gcp, 'enabled', False):
-        backends["gcp"].update({
-            "enabled": True,
-            "projectId": getattr(gcp, 'project_id', ''),
-            "status": f"Project: {getattr(gcp, 'project_id', 'N/A')}"[:30]
-        })
-    
-    azure = getattr(cfg, 'azure', None)
-    if azure and getattr(azure, 'enabled', False):
-        backends["azure"].update({
-            "enabled": True,
-            "vaultUrl": getattr(azure, 'vault_url', ''),
-            "status": "Connected" if getattr(azure, 'vault_url', None) else "URL missing"
-        })
-    
+
+    vault = getattr(cfg, "vault", None)
+    if vault and getattr(vault, "enabled", False):
+        backends["vault"].update(
+            {
+                "enabled": True,
+                "url": getattr(vault, "url", ""),
+                "mountPoint": getattr(vault, "mount_point", ""),
+                "status": "Connected" if getattr(vault, "url", None) else "URL missing",
+            }
+        )
+
+    aws = getattr(cfg, "aws", None)
+    if aws and getattr(aws, "enabled", False):
+        backends["aws"].update(
+            {
+                "enabled": True,
+                "region": getattr(aws, "region", ""),
+                "prefix": getattr(aws, "prefix", ""),
+                "status": f"Region: {getattr(aws, 'region', 'N/A')}",
+            }
+        )
+
+    gcp = getattr(cfg, "gcp", None)
+    if gcp and getattr(gcp, "enabled", False):
+        backends["gcp"].update(
+            {
+                "enabled": True,
+                "projectId": getattr(gcp, "project_id", ""),
+                "status": f"Project: {getattr(gcp, 'project_id', 'N/A')}"[:30],
+            }
+        )
+
+    azure = getattr(cfg, "azure", None)
+    if azure and getattr(azure, "enabled", False):
+        backends["azure"].update(
+            {
+                "enabled": True,
+                "vaultUrl": getattr(azure, "vault_url", ""),
+                "status": "Connected"
+                if getattr(azure, "vault_url", None)
+                else "URL missing",
+            }
+        )
+
     return backends
 
 
@@ -80,7 +112,13 @@ async def _check_secret_health() -> Dict[str, Any]:
     """Check secrets backend health."""
     backend = build_secrets_backend()
     if backend is None:
-        return {"hasBackend": False, "ok": False, "status": "No backend configured", "icon": "⚠️", "color": "#f59e0b"}
+        return {
+            "hasBackend": False,
+            "ok": False,
+            "status": "No backend configured",
+            "icon": "⚠️",
+            "color": "#f59e0b",
+        }
 
     test_name = os.getenv("SECRETS_HEALTH_CHECK_NAME", "fastmvc/health")
     try:
@@ -90,7 +128,7 @@ async def _check_secret_health() -> Dict[str, Any]:
             "ok": value is not None,
             "status": "Secret retrieved" if value is not None else "Secret not found",
             "icon": "✅" if value is not None else "⚠️",
-            "color": "#10b981" if value is not None else "#f59e0b"
+            "color": "#10b981" if value is not None else "#f59e0b",
         }
     except Exception as exc:
         return {
@@ -98,7 +136,7 @@ async def _check_secret_health() -> Dict[str, Any]:
             "ok": False,
             "status": str(exc)[:50],
             "icon": "❌",
-            "color": "#ef4444"
+            "color": "#ef4444",
         }
 
 
@@ -120,8 +158,17 @@ def _diff_envs(base: Dict[str, str], current: Dict[str, str]) -> Dict[str, Any]:
     """Compare environment files."""
     added = {k: current[k] for k in current.keys() - base.keys()}
     removed = {k: base[k] for k in base.keys() - current.keys()}
-    changed = {k: {"from": "***", "to": "***"} for k in base.keys() & current.keys() if base[k] != current[k]}
-    return {"added": len(added), "removed": len(removed), "changed": len(changed), "total_vars": len(current)}
+    changed = {
+        k: {"from": "***", "to": "***"}
+        for k in base.keys() & current.keys()
+        if base[k] != current[k]
+    }
+    return {
+        "added": len(added),
+        "removed": len(removed),
+        "changed": len(changed),
+        "total_vars": len(current),
+    }
 
 
 def _load_env_diff() -> Dict[str, Any]:
@@ -130,7 +177,10 @@ def _load_env_diff() -> Dict[str, Any]:
     example = _parse_env_file(root / ".env.example")
     current = _parse_env_file(root / ".env")
     if not example and not current:
-        return {"hasEnv": False, "diff": {"added": 0, "removed": 0, "changed": 0, "total_vars": 0}}
+        return {
+            "hasEnv": False,
+            "diff": {"added": 0, "removed": 0, "changed": 0, "total_vars": 0},
+        }
     return {"hasEnv": True, "diff": _diff_envs(example, current)}
 
 
@@ -640,6 +690,11 @@ async def secrets_dashboard() -> HTMLResponse:
 
 @router.get("/state", response_class=JSONResponse, summary="Secrets/config state")
 async def secrets_state() -> JSONResponse:
+    """Execute secrets_state operation.
+
+    Returns:
+        The result of the operation.
+    """
     backends = _load_backends_state()
     health = await _check_secret_health()
     env_diff = _load_env_diff()

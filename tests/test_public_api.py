@@ -1,5 +1,4 @@
-"""
-Public API import tests for fast_dashboards.
+"""Public API import tests for fast_dashboards.
 
 Ensures __version__ (if present) and every name in __all__ resolve.
 Imports run inside tests (not at collection) so optional deps can fail one test.
@@ -15,6 +14,11 @@ PACKAGE = "fast_dashboards"
 
 
 def test_package_imports():
+    """Execute test_package_imports operation.
+
+    Returns:
+        The result of the operation.
+    """
     try:
         m = importlib.import_module(PACKAGE)
     except ImportError as e:
@@ -23,6 +27,11 @@ def test_package_imports():
 
 
 def test_version_when_present():
+    """Execute test_version_when_present operation.
+
+    Returns:
+        The result of the operation.
+    """
     try:
         m = importlib.import_module(PACKAGE)
     except ImportError as e:
@@ -33,6 +42,11 @@ def test_version_when_present():
 
 
 def test_public_exports_resolve():
+    """Execute test_public_exports_resolve operation.
+
+    Returns:
+        The result of the operation.
+    """
     try:
         m = importlib.import_module(PACKAGE)
     except ImportError as e:
@@ -41,7 +55,5 @@ def test_public_exports_resolve():
         try:
             obj = getattr(m, export_name)
         except Exception as e:
-            pytest.skip(
-                f"export {export_name!r} not loadable in this environment: {e}"
-            )
+            pytest.skip(f"export {export_name!r} not loadable in this environment: {e}")
         assert obj is not None

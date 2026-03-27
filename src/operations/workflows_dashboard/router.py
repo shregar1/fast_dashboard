@@ -1,6 +1,4 @@
-"""
-Workflows Dashboard Router with beautiful UI.
-"""
+"""Workflows Dashboard Router with beautiful UI."""
 
 from __future__ import annotations
 
@@ -18,7 +16,7 @@ router = APIRouter(prefix="/dashboard/workflows", tags=["Workflows Dashboard"])
 def _get_workflows_config() -> Optional[Any]:
     """Get workflows configuration via registry."""
     cfg_class = registry.get_config("workflows")
-    if cfg_class and hasattr(cfg_class, 'instance'):
+    if cfg_class and hasattr(cfg_class, "instance"):
         return cfg_class.instance().get_config()
     return None
 
@@ -31,7 +29,7 @@ async def workflows_dashboard() -> HTMLResponse:
         description="Workflow engine status, configuration, and example order lifecycle for FastMVC.",
         path="/dashboard/workflows",
     )
-    
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -590,20 +588,26 @@ async def workflows_dashboard() -> HTMLResponse:
 async def workflows_state() -> JSONResponse:
     """Return JSON snapshot of workflow engine configuration and sample runs."""
     cfg = _get_workflows_config()
-    
+
     if cfg is None:
         engine_info: Dict[str, Any] = {
             "enabled": False,
             "engineName": None,
-            "status": "Not configured"
+            "status": "Not configured",
         }
     else:
         engine_info = {
-            "enabled": getattr(cfg, 'enabled', False),
-            "engineName": getattr(cfg, 'engine', None),
-            "temporal": f"{getattr(cfg, 'temporal_address', '')} / {getattr(cfg, 'temporal_namespace', '')}" if getattr(cfg, 'engine', None) == "temporal" else None,
-            "prefect": getattr(cfg, 'prefect_api_url', '') if getattr(cfg, 'engine', None) == "prefect" else None,
-            "dagster": getattr(cfg, 'dagster_grpc_endpoint', '') if getattr(cfg, 'engine', None) == "dagster" else None,
+            "enabled": getattr(cfg, "enabled", False),
+            "engineName": getattr(cfg, "engine", None),
+            "temporal": f"{getattr(cfg, 'temporal_address', '')} / {getattr(cfg, 'temporal_namespace', '')}"
+            if getattr(cfg, "engine", None) == "temporal"
+            else None,
+            "prefect": getattr(cfg, "prefect_api_url", "")
+            if getattr(cfg, "engine", None) == "prefect"
+            else None,
+            "dagster": getattr(cfg, "dagster_grpc_endpoint", "")
+            if getattr(cfg, "engine", None) == "dagster"
+            else None,
         }
 
     runs: list[Dict[str, Any]] = []

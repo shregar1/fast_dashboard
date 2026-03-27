@@ -1,3 +1,5 @@
+"""Module __init__.py."""
+
 from .providers import (
     AwsSecretsManagerBackend,
     AzureKeyVaultBackend,

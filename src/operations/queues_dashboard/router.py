@@ -1,6 +1,4 @@
-"""
-Queues & Jobs Dashboard Router with beautiful visualizations.
-"""
+"""Queues & Jobs Dashboard Router with beautiful visualizations."""
 
 from __future__ import annotations
 
@@ -20,13 +18,15 @@ boto3, _ = optional_import("boto3")
 _celery_mod, Celery = optional_import("celery", "Celery")
 rq, _ = optional_import("rq")
 _redis_mod, Redis = optional_import("redis", "Redis")
-_rq_registry_mod, FailedJobRegistry = optional_import("rq.registry", "FailedJobRegistry")
+_rq_registry_mod, FailedJobRegistry = optional_import(
+    "rq.registry", "FailedJobRegistry"
+)
 
 
 def _get_jobs_config() -> Optional[Any]:
     """Get jobs configuration via registry."""
     cfg_class = registry.get_config("jobs")
-    if cfg_class and hasattr(cfg_class, 'instance'):
+    if cfg_class and hasattr(cfg_class, "instance"):
         return cfg_class.instance().get_config()
     return None
 
@@ -34,7 +34,7 @@ def _get_jobs_config() -> Optional[Any]:
 def _get_queues_config() -> Optional[Any]:
     """Get queues configuration via registry."""
     cfg_class = registry.get_config("queues")
-    if cfg_class and hasattr(cfg_class, 'instance'):
+    if cfg_class and hasattr(cfg_class, "instance"):
         return cfg_class.instance().get_config()
     return None
 
@@ -43,6 +43,14 @@ router = APIRouter(prefix="/dashboard/queues", tags=["Queues Dashboard"])
 
 
 def _inspect_rabbitmq(cfg) -> Optional[Dict[str, Any]]:
+    """Execute _inspect_rabbitmq operation.
+
+    Args:
+        cfg: The cfg parameter.
+
+    Returns:
+        The result of the operation.
+    """
     if not (cfg.enabled and cfg.url):
         return None
     management_url = getattr(cfg, "management_url", None)
@@ -73,7 +81,7 @@ def _inspect_rabbitmq(cfg) -> Optional[Dict[str, Any]]:
             "inFlight": total_unacked,
             "delayed": 0,
             "icon": "🐰",
-            "color": "#ff6b6b"
+            "color": "#ff6b6b",
         }
     except Exception as exc:
         logger.warning(f"RabbitMQ inspection failed: {exc}")
@@ -82,11 +90,19 @@ def _inspect_rabbitmq(cfg) -> Optional[Dict[str, Any]]:
             "name": management_url or cfg.url,
             "error": str(exc)[:50],
             "icon": "🐰",
-            "color": "#ff6b6b"
+            "color": "#ff6b6b",
         }
 
 
 def _inspect_sqs(cfg) -> Optional[Dict[str, Any]]:
+    """Execute _inspect_sqs operation.
+
+    Args:
+        cfg: The cfg parameter.
+
+    Returns:
+        The result of the operation.
+    """
     if not (cfg.enabled and cfg.queue_url and boto3 is not None):
         return None
     try:
@@ -99,7 +115,11 @@ def _inspect_sqs(cfg) -> Optional[Dict[str, Any]]:
         sqs = boto3.client("sqs", region_name=cfg.region, **session_kwargs)
         attrs = sqs.get_queue_attributes(
             QueueUrl=cfg.queue_url,
-            AttributeNames=["ApproximateNumberOfMessages", "ApproximateNumberOfMessagesNotVisible", "ApproximateNumberOfMessagesDelayed"],
+            AttributeNames=[
+                "ApproximateNumberOfMessages",
+                "ApproximateNumberOfMessagesNotVisible",
+                "ApproximateNumberOfMessagesDelayed",
+            ],
         )["Attributes"]
         return {
             "backend": "sqs",
@@ -108,7 +128,7 @@ def _inspect_sqs(cfg) -> Optional[Dict[str, Any]]:
             "inFlight": int(attrs.get("ApproximateNumberOfMessagesNotVisible", "0")),
             "delayed": int(attrs.get("ApproximateNumberOfMessagesDelayed", "0")),
             "icon": "📦",
-            "color": "#f59e0b"
+            "color": "#f59e0b",
         }
     except Exception as exc:
         logger.warning(f"SQS inspection failed: {exc}")
@@ -117,28 +137,77 @@ def _inspect_sqs(cfg) -> Optional[Dict[str, Any]]:
             "name": cfg.queue_url.split("/")[-1] if cfg.queue_url else "SQS",
             "error": str(exc)[:50],
             "icon": "📦",
-            "color": "#f59e0b"
+            "color": "#f59e0b",
         }
 
 
 def _inspect_jobs() -> Dict[str, Any]:
+    """Execute _inspect_jobs operation.
+
+    Returns:
+        The result of the operation.
+    """
     cfg = _get_jobs_config()
     if cfg is None:
         return {
-            "celery": {"enabled": False, "workers": 0, "active": 0, "icon": "🌿", "color": "#22c55e", "status": "disabled"},
-            "rq": {"enabled": False, "queueSize": 0, "failed": 0, "icon": "🔴", "color": "#ef4444", "status": "disabled"},
-            "dramatiq": {"enabled": False, "status": "n/a", "icon": "🎭", "color": "#8b5cf6", "status": "disabled"},
+            "celery": {
+                "enabled": False,
+                "workers": 0,
+                "active": 0,
+                "icon": "🌿",
+                "color": "#22c55e",
+                "status": "disabled",
+            },
+            "rq": {
+                "enabled": False,
+                "queueSize": 0,
+                "failed": 0,
+                "icon": "🔴",
+                "color": "#ef4444",
+                "status": "disabled",
+            },
+            "dramatiq": {
+                "enabled": False,
+                "status": "n/a",
+                "icon": "🎭",
+                "color": "#8b5cf6",
+                "status": "disabled",
+            },
         }
-    
+
     out: Dict[str, Any] = {
-        "celery": {"enabled": cfg.celery.enabled, "workers": 0, "active": 0, "icon": "🌿", "color": "#22c55e", "status": "idle"},
-        "rq": {"enabled": cfg.rq.enabled, "queueSize": 0, "failed": 0, "icon": "🔴", "color": "#ef4444", "status": "idle"},
-        "dramatiq": {"enabled": cfg.dramatiq.enabled, "status": "configured" if cfg.dramatiq.enabled else "n/a", "icon": "🎭", "color": "#8b5cf6", "status": "idle"},
+        "celery": {
+            "enabled": cfg.celery.enabled,
+            "workers": 0,
+            "active": 0,
+            "icon": "🌿",
+            "color": "#22c55e",
+            "status": "idle",
+        },
+        "rq": {
+            "enabled": cfg.rq.enabled,
+            "queueSize": 0,
+            "failed": 0,
+            "icon": "🔴",
+            "color": "#ef4444",
+            "status": "idle",
+        },
+        "dramatiq": {
+            "enabled": cfg.dramatiq.enabled,
+            "status": "configured" if cfg.dramatiq.enabled else "n/a",
+            "icon": "🎭",
+            "color": "#8b5cf6",
+            "status": "idle",
+        },
     }
 
     if cfg.celery.enabled and Celery is not None:
         try:
-            app = Celery(cfg.celery.namespace, broker=cfg.celery.broker_url, backend=cfg.celery.result_backend)
+            app = Celery(
+                cfg.celery.namespace,
+                broker=cfg.celery.broker_url,
+                backend=cfg.celery.result_backend,
+            )
             insp = app.control.inspect()
             active = insp.active() or {}
             out["celery"]["workers"] = len(active)
@@ -149,12 +218,19 @@ def _inspect_jobs() -> Dict[str, Any]:
             out["celery"]["error"] = str(exc)[:30]
             out["celery"]["status"] = "error"
 
-    if cfg.rq.enabled and rq is not None and Redis is not None and FailedJobRegistry is not None:
+    if (
+        cfg.rq.enabled
+        and rq is not None
+        and Redis is not None
+        and FailedJobRegistry is not None
+    ):
         try:
             redis_conn = Redis.from_url(cfg.rq.redis_url)
             queue = rq.Queue(cfg.rq.queue_name, connection=redis_conn)
             out["rq"]["queueSize"] = queue.count
-            failed_registry = FailedJobRegistry(cfg.rq.queue_name, connection=redis_conn)
+            failed_registry = FailedJobRegistry(
+                cfg.rq.queue_name, connection=redis_conn
+            )
             out["rq"]["failed"] = len(failed_registry)
             out["rq"]["status"] = "active" if queue.count > 0 else "idle"
         except Exception as exc:
@@ -176,7 +252,7 @@ async def queues_dashboard() -> HTMLResponse:
         description="Queue backends, workers, and job runner status for RabbitMQ, SQS, NATS, Celery, RQ, and Dramatiq.",
         path="/dashboard/queues",
     )
-    
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>

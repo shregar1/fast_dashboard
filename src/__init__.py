@@ -1,5 +1,4 @@
-"""
-fast_dashboards – Dashboards extension for FastMVC.
+"""fast_dashboards – Dashboards extension for FastMVC.
 
 This package provides dashboard routers for FastMVC applications. Dependencies
 on host app modules (configurations, core.datastores, start_utils, etc.) are
@@ -46,6 +45,14 @@ __all__ = [
 
 
 def __getattr__(name: str):
+    """Execute __getattr__ operation.
+
+    Args:
+        name: The name parameter.
+
+    Returns:
+        The result of the operation.
+    """
     if name == "sign_embed_url":
         from .core.embed_signing import sign_embed_url
 

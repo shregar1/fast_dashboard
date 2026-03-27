@@ -1,5 +1,4 @@
-"""
-API Dashboard Registry.
+"""API Dashboard Registry.
 
 Holds metadata and sample payloads for APIs so that the
 API dashboard can show and exercise them.
@@ -16,9 +15,7 @@ HttpMethod = Literal["GET", "POST", "PUT", "PATCH", "DELETE"]
 
 @dataclass
 class EndpointSample:
-    """
-    Describes a single API endpoint and a sample request.
-    """
+    """Describes a single API endpoint and a sample request."""
 
     key: str
     name: str
@@ -45,8 +42,7 @@ def register_endpoint_sample(
     sample_headers: Optional[Dict[str, str]] = None,
     enabled: bool = True,
 ) -> None:
-    """
-    Register (or update) an endpoint sample in the in-memory registry.
+    """Register (or update) an endpoint sample in the in-memory registry.
 
     Typical usage in a controller module:
 
@@ -82,4 +78,3 @@ def list_endpoint_samples() -> List[EndpointSample]:
 def get_endpoint_sample(key: str) -> Optional[EndpointSample]:
     """Return a single endpoint sample by key, if present."""
     return _registry.get(key)
-

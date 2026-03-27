@@ -1,5 +1,4 @@
-"""
-Shared layout helpers for FastMVC HTML dashboards.
+"""Shared layout helpers for FastMVC HTML dashboards.
 
 Provides a common shell (HTML, body, base CSS) so individual dashboards
 only define their inner grid/cards and page-specific JavaScript.
@@ -149,19 +148,19 @@ def render_dashboard_page(
     seo_path: str = "/",
     seo: Optional[PageSEO] = None,
 ) -> str:
-    """
-    Compose a full HTML page for a dashboard using the shared layout.
+    """Compose a full HTML page for a dashboard using the shared layout.
 
     Injects production SEO (Open Graph, Twitter Card, JSON-LD, canonical when
     ``FASTMVC_PUBLIC_BASE_URL`` is set). Override with *seo* or pass *seo_path*
     for accurate ``og:url`` / canonical paths.
     """
-
     page_seo = seo or default_dashboard_seo(title, subtitle, path=seo_path)
     head_seo = render_seo_head(page_seo)
 
     accent_gradient = accent_gradient or "rgba(ACCENT_R, ACCENT_G, ACCENT_B, 0.4)"
-    accent_bg_gradient = accent_bg_gradient or "rgba(ACCENT_R, ACCENT_G, ACCENT_B, 0.24)"
+    accent_bg_gradient = (
+        accent_bg_gradient or "rgba(ACCENT_R, ACCENT_G, ACCENT_B, 0.24)"
+    )
     accent_border = accent_border or "rgba(ACCENT_R, ACCENT_G, ACCENT_B, 0.5)"
 
     # Convert hex accent (e.g. #22c55e) to RGB for gradients; fallback to a generic teal.
@@ -176,9 +175,24 @@ def render_dashboard_page(
     css = (
         BASE_CSS.replace("ACCENT_COLOR", accent_color)
         .replace("ACCENT_SOFT", f"rgba({r}, {g}, {b}, 0.12)")
-        .replace("ACCENT_GRADIENT", accent_gradient.replace("ACCENT_R", str(r)).replace("ACCENT_G", str(g)).replace("ACCENT_B", str(b)))
-        .replace("ACCENT_BG_GRADIENT", accent_bg_gradient.replace("ACCENT_R", str(r)).replace("ACCENT_G", str(g)).replace("ACCENT_B", str(b)))
-        .replace("ACCENT_BORDER", accent_border.replace("ACCENT_R", str(r)).replace("ACCENT_G", str(g)).replace("ACCENT_B", str(b)))
+        .replace(
+            "ACCENT_GRADIENT",
+            accent_gradient.replace("ACCENT_R", str(r))
+            .replace("ACCENT_G", str(g))
+            .replace("ACCENT_B", str(b)),
+        )
+        .replace(
+            "ACCENT_BG_GRADIENT",
+            accent_bg_gradient.replace("ACCENT_R", str(r))
+            .replace("ACCENT_G", str(g))
+            .replace("ACCENT_B", str(b)),
+        )
+        .replace(
+            "ACCENT_BORDER",
+            accent_border.replace("ACCENT_R", str(r))
+            .replace("ACCENT_G", str(g))
+            .replace("ACCENT_B", str(b)),
+        )
     )
 
     html = f"""
@@ -213,4 +227,3 @@ def render_dashboard_page(
 
 
 __all__ = ["BASE_CSS", "render_dashboard_page"]
-

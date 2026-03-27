@@ -1,5 +1,4 @@
-"""
-Fast Dashboards Core - Production-grade utilities.
+"""Fast Dashboards Core - Production-grade utilities.
 
 This module provides enterprise-ready features for:
 - Authentication & Authorization

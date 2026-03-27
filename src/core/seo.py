@@ -1,5 +1,4 @@
-"""
-Production-grade HTML SEO for FastMVC dashboards and static pages.
+"""Production-grade HTML SEO for FastMVC dashboards and static pages.
 
 Provides canonical URLs, Open Graph, Twitter Cards, theme color, and JSON-LD
 (`WebPage` + `SoftwareApplication`) with safe defaults for **internal**
@@ -21,9 +20,11 @@ from dataclasses import dataclass, field
 from html import escape
 from typing import Any
 
-def render_dashboard_inline_head(*, page_title: str, description: str, path: str) -> str:
-    """SEO ``<head>`` inner markup for inline HTML dashboards (OG, Twitter, JSON-LD)."""
 
+def render_dashboard_inline_head(
+    *, page_title: str, description: str, path: str
+) -> str:
+    """SEO ``<head>`` inner markup for inline HTML dashboards (OG, Twitter, JSON-LD)."""
     return render_seo_head(default_dashboard_seo(page_title, description, path=path))
 
 
@@ -41,20 +42,26 @@ _WS = re.compile(r"\s+")
 
 
 def _strip_ws(s: str) -> str:
+    """Execute _strip_ws operation.
+
+    Args:
+        s: The s parameter.
+
+    Returns:
+        The result of the operation.
+    """
     return _WS.sub(" ", s.strip())
 
 
 def _json_ld_embed(data: dict[str, Any]) -> str:
     """Serialize JSON-LD for embedding in HTML (mitigate ``</script>`` breakouts)."""
-
     raw = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     return raw.replace("</", "<\\/")
 
 
 @dataclass(frozen=True)
 class PageSEO:
-    """
-    Metadata bundle for ``<head>`` social and search tags.
+    """Metadata bundle for ``<head>`` social and search tags.
 
     Attributes:
         title: Document title (also used for ``og:title`` / ``twitter:title``).
@@ -71,6 +78,7 @@ class PageSEO:
         theme_color: PWA / mobile browser chrome hint.
         include_json_ld: Emit ``WebPage`` + ``SoftwareApplication`` structured data.
         extra_json_ld: Additional ``@graph`` nodes (merged into the JSON-LD script).
+
     """
 
     title: str
@@ -90,6 +98,14 @@ class PageSEO:
 
 
 def _absolute_url(path: str) -> str | None:
+    """Execute _absolute_url operation.
+
+    Args:
+        path: The path parameter.
+
+    Returns:
+        The result of the operation.
+    """
     base = (os.environ.get("FASTMVC_PUBLIC_BASE_URL") or "").rstrip("/")
     if not base:
         return None
@@ -105,10 +121,7 @@ def default_dashboard_seo(
     canonical_url: str | None = None,
     og_image_url: str | None = None,
 ) -> PageSEO:
-    """
-    Sensible SEO for operational dashboards: **noindex** by default, full OG/Twitter for link previews.
-    """
-
+    """Sensible SEO for operational dashboards: **noindex** by default, full OG/Twitter for link previews."""
     return PageSEO(
         title=page_title,
         description=_strip_ws(description)[:320],
@@ -120,7 +133,6 @@ def default_dashboard_seo(
 
 def render_seo_head(seo: PageSEO) -> str:
     """Return inner ``<head>`` markup (no ``<head>`` wrapper): meta, link, optional JSON-LD."""
-
     title_e = escape(seo.title, quote=True)
     desc = _strip_ws(seo.description)
     desc_e = escape(desc, quote=True)
@@ -209,13 +221,11 @@ def render_seo_head(seo: PageSEO) -> str:
 
 def robots_txt_private_dashboards() -> str:
     """Disallow all crawlers — use for internal ops / admin dashboards."""
-
     return "User-agent: *\nDisallow: /\n"
 
 
 def robots_txt_public_site(*, sitemap_url: str | None = None) -> str:
     """Permissive robots.txt for a public marketing or docs host."""
-
     lines = ["User-agent: *", "Allow: /", ""]
     if sitemap_url:
         lines.append(f"Sitemap: {sitemap_url}")

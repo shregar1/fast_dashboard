@@ -1,5 +1,4 @@
-"""
-Composite dashboard router.
+"""Composite dashboard router.
 
 Nests all dashboard routers (health, API, queues, tenants, secrets, workflows)
 under a single router for inclusion in the app.

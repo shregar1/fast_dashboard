@@ -1,6 +1,4 @@
-"""
-Tenants, Auth & Feature Flags Dashboard Router with beautiful UI.
-"""
+"""Tenants, Auth & Feature Flags Dashboard Router with beautiful UI."""
 
 from __future__ import annotations
 
@@ -20,14 +18,14 @@ async def _load_tenants() -> List[Dict[str, Any]]:
     store = registry.get_tenant_store()
     if store is None:
         return []
-    
+
     try:
         tenants = await store.list_all(active_only=False)
-        return [t.to_dict() if hasattr(t, 'to_dict') else dict(t) for t in tenants]
+        return [t.to_dict() if hasattr(t, "to_dict") else dict(t) for t in tenants]
     except Exception:
         try:
             tenants = store.list_all()
-            return [t.to_dict() if hasattr(t, 'to_dict') else dict(t) for t in tenants]
+            return [t.to_dict() if hasattr(t, "to_dict") else dict(t) for t in tenants]
         except Exception:
             return []
 
@@ -35,48 +33,62 @@ async def _load_tenants() -> List[Dict[str, Any]]:
 def _load_feature_flags() -> Dict[str, Any]:
     """Load feature flags configuration via registry."""
     cfg_class = registry.get_config("feature_flags")
-    if cfg_class is None or not hasattr(cfg_class, 'instance'):
+    if cfg_class is None or not hasattr(cfg_class, "instance"):
         return {
             "launchdarkly": {"enabled": False, "mode": "Not configured"},
             "unleash": {"enabled": False, "mode": "Not configured"},
         }
-    
+
     try:
         cfg = cfg_class.instance().get_config()
         return {
             "launchdarkly": {
-                "enabled": getattr(cfg.launchdarkly, 'enabled', False),
-                "mode": "SDK Active" if getattr(cfg.launchdarkly, 'sdk_key', None) else "SDK Key Missing",
-                "userKey": getattr(cfg.launchdarkly, 'default_user_key', ''),
+                "enabled": getattr(cfg.launchdarkly, "enabled", False),
+                "mode": "SDK Active"
+                if getattr(cfg.launchdarkly, "sdk_key", None)
+                else "SDK Key Missing",
+                "userKey": getattr(cfg.launchdarkly, "default_user_key", ""),
                 "icon": "🚀",
-                "color": "#3b82f6"
+                "color": "#3b82f6",
             },
             "unleash": {
-                "enabled": getattr(cfg.unleash, 'enabled', False),
-                "mode": "Connected" if getattr(cfg.unleash, 'api_key', None) else "API Key Missing",
-                "url": getattr(cfg.unleash, 'url', ''),
-                "appName": getattr(cfg.unleash, 'app_name', ''),
+                "enabled": getattr(cfg.unleash, "enabled", False),
+                "mode": "Connected"
+                if getattr(cfg.unleash, "api_key", None)
+                else "API Key Missing",
+                "url": getattr(cfg.unleash, "url", ""),
+                "appName": getattr(cfg.unleash, "app_name", ""),
                 "icon": "🐆",
-                "color": "#8b5cf6"
+                "color": "#8b5cf6",
             },
         }
     except Exception as e:
         return {
-            "launchdarkly": {"enabled": False, "mode": f"Error: {str(e)[:30]}", "icon": "🚀", "color": "#3b82f6"},
-            "unleash": {"enabled": False, "mode": "Error", "icon": "🐆", "color": "#8b5cf6"},
+            "launchdarkly": {
+                "enabled": False,
+                "mode": f"Error: {str(e)[:30]}",
+                "icon": "🚀",
+                "color": "#3b82f6",
+            },
+            "unleash": {
+                "enabled": False,
+                "mode": "Error",
+                "icon": "🐆",
+                "color": "#8b5cf6",
+            },
         }
 
 
 def _load_identity_providers() -> Dict[str, Any]:
     """Load identity providers configuration via registry."""
     cfg_class = registry.get_config("identity")
-    if cfg_class is None or not hasattr(cfg_class, 'instance'):
+    if cfg_class is None or not hasattr(cfg_class, "instance"):
         return {}
-    
+
     try:
         cfg = cfg_class.instance().get_config()
         providers = {}
-        
+
         idp_configs = {
             "google": ("Google", "🔵", "#ea4335"),
             "github": ("GitHub", "⚫", "#333"),
@@ -85,20 +97,25 @@ def _load_identity_providers() -> Dict[str, Any]:
             "auth0": ("Auth0", "🟠", "#eb5424"),
             "saml": ("SAML", "🛡️", "#10b981"),
         }
-        
+
         for key, (name, icon, color) in idp_configs.items():
             provider = getattr(cfg, key, None)
             if provider:
-                is_configured = bool(getattr(provider, 'client_id', None) or getattr(provider, 'idp_metadata_url', None))
+                is_configured = bool(
+                    getattr(provider, "client_id", None)
+                    or getattr(provider, "idp_metadata_url", None)
+                )
                 providers[key] = {
                     "name": name,
-                    "enabled": getattr(provider, 'enabled', False),
+                    "enabled": getattr(provider, "enabled", False),
                     "configured": is_configured,
-                    "redirectUri": getattr(provider, 'redirect_uri', getattr(provider, 'acs_url', '')),
+                    "redirectUri": getattr(
+                        provider, "redirect_uri", getattr(provider, "acs_url", "")
+                    ),
                     "icon": icon,
-                    "color": color
+                    "color": color,
                 }
-        
+
         return providers
     except Exception:
         return {}
@@ -107,16 +124,16 @@ def _load_identity_providers() -> Dict[str, Any]:
 def _load_quotas() -> Dict[str, Any]:
     """Load rate limit configuration via registry."""
     cfg_class = registry.get_config("rate_limit")
-    if cfg_class is None or not hasattr(cfg_class, 'instance'):
+    if cfg_class is None or not hasattr(cfg_class, "instance"):
         return {"enabled": False, "mode": "Not configured"}
-    
+
     try:
         cfg = cfg_class.instance().get_config()
         return {
-            "enabled": getattr(cfg, 'enabled', False),
-            "defaultPerMinute": getattr(cfg, 'default_per_minute', 60),
-            "defaultBurst": getattr(cfg, 'default_burst', 10),
-            "overrides": len(getattr(cfg, 'per_tenant_overrides', {})),
+            "enabled": getattr(cfg, "enabled", False),
+            "defaultPerMinute": getattr(cfg, "default_per_minute", 60),
+            "defaultBurst": getattr(cfg, "default_burst", 10),
+            "overrides": len(getattr(cfg, "per_tenant_overrides", {})),
         }
     except Exception as e:
         return {"enabled": False, "mode": f"Error: {str(e)[:30]}"}
@@ -130,7 +147,7 @@ async def tenants_dashboard() -> HTMLResponse:
         description="Tenants, identity providers, feature flags, and rate-limit configuration overview.",
         path="/dashboard/tenants",
     )
-    
+
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -771,11 +788,18 @@ async def tenants_dashboard() -> HTMLResponse:
 
 @router.get("/state", response_class=JSONResponse, summary="Tenants/auth state")
 async def tenants_state() -> JSONResponse:
+    """Execute tenants_state operation.
+
+    Returns:
+        The result of the operation.
+    """
     tenants = await _load_tenants()
     flags = _load_feature_flags()
     idps = _load_identity_providers()
     quotas = _load_quotas()
-    return JSONResponse({"tenants": tenants, "flags": flags, "idps": idps, "quotas": quotas})
+    return JSONResponse(
+        {"tenants": tenants, "flags": flags, "idps": idps, "quotas": quotas}
+    )
 
 
 __all__ = ["router"]

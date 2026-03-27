@@ -1,5 +1,4 @@
-"""
-Secrets backend abstraction.
+"""Secrets backend abstraction.
 
 Supports AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager,
 and Azure Key Vault behind ISecretsBackend.
@@ -22,17 +21,31 @@ except ImportError:
 boto3, _ = optional_import("boto3")
 hvac, _ = optional_import("hvac")
 gcp_secretmanager, _ = optional_import("google.cloud.secretmanager")
-_az_identity, ClientSecretCredential = optional_import("azure.identity", "ClientSecretCredential")
+_az_identity, ClientSecretCredential = optional_import(
+    "azure.identity", "ClientSecretCredential"
+)
 _az_kv, SecretClient = optional_import("azure.keyvault.secrets", "SecretClient")
 
 
 class ISecretsBackend(ABC):
+    """Represents the ISecretsBackend class."""
+
     @abstractmethod
     async def get_secret(self, name: str) -> Optional[str]:
+        """Execute get_secret operation.
+
+        Args:
+            name: The name parameter.
+
+        Returns:
+            The result of the operation.
+        """
         raise NotImplementedError
 
 
 class AwsSecretsManagerBackend(ISecretsBackend):
+    """Represents the AwsSecretsManagerBackend class."""
+
     def __init__(
         self,
         region: str,
@@ -40,6 +53,14 @@ class AwsSecretsManagerBackend(ISecretsBackend):
         secret_access_key: Optional[str],
         prefix: str,
     ) -> None:
+        """Execute __init__ operation.
+
+        Args:
+            region: The region parameter.
+            access_key_id: The access_key_id parameter.
+            secret_access_key: The secret_access_key parameter.
+            prefix: The prefix parameter.
+        """
         if boto3 is None:
             raise RuntimeError("boto3 is not installed")
         kwargs = {"region_name": region}
@@ -50,6 +71,14 @@ class AwsSecretsManagerBackend(ISecretsBackend):
         self._prefix = prefix.rstrip("/") if prefix else ""
 
     async def get_secret(self, name: str) -> Optional[str]:
+        """Execute get_secret operation.
+
+        Args:
+            name: The name parameter.
+
+        Returns:
+            The result of the operation.
+        """
         full_name = f"{self._prefix}/{name}" if self._prefix else name
         try:
             resp = self._client.get_secret_value(SecretId=full_name)
@@ -60,13 +89,30 @@ class AwsSecretsManagerBackend(ISecretsBackend):
 
 
 class VaultBackend(ISecretsBackend):
+    """Represents the VaultBackend class."""
+
     def __init__(self, url: str, token: Optional[str], mount_point: str) -> None:
+        """Execute __init__ operation.
+
+        Args:
+            url: The url parameter.
+            token: The token parameter.
+            mount_point: The mount_point parameter.
+        """
         if hvac is None:
             raise RuntimeError("hvac (Vault client) is not installed")
         self._client = hvac.Client(url=url, token=token)
         self._mount_point = mount_point
 
     async def get_secret(self, name: str) -> Optional[str]:
+        """Execute get_secret operation.
+
+        Args:
+            name: The name parameter.
+
+        Returns:
+            The result of the operation.
+        """
         try:
             resp = self._client.secrets.kv.v2.read_secret_version(
                 path=name,
@@ -74,6 +120,7 @@ class VaultBackend(ISecretsBackend):
             )
             data = resp.get("data", {}).get("data", {})
             import json
+
             return json.dumps(data)
         except Exception as exc:
             logger.warning("Vault error for %s: %s", name, exc)
@@ -81,20 +128,43 @@ class VaultBackend(ISecretsBackend):
 
 
 class GcpSecretsManagerBackend(ISecretsBackend):
+    """Represents the GcpSecretsManagerBackend class."""
+
     def __init__(self, project_id: str, credentials_json_path: Optional[str]) -> None:
+        """Execute __init__ operation.
+
+        Args:
+            project_id: The project_id parameter.
+            credentials_json_path: The credentials_json_path parameter.
+        """
         if gcp_secretmanager is None:
             raise RuntimeError("google-cloud-secret-manager is not installed")
         if credentials_json_path:
             from google.oauth2 import service_account
-            creds = service_account.Credentials.from_service_account_file(credentials_json_path)
-            self._client = gcp_secretmanager.SecretManagerServiceClient(credentials=creds)
+
+            creds = service_account.Credentials.from_service_account_file(
+                credentials_json_path
+            )
+            self._client = gcp_secretmanager.SecretManagerServiceClient(
+                credentials=creds
+            )
         else:
             self._client = gcp_secretmanager.SecretManagerServiceClient()
         self._project_id = project_id
 
     async def get_secret(self, name: str) -> Optional[str]:
+        """Execute get_secret operation.
+
+        Args:
+            name: The name parameter.
+
+        Returns:
+            The result of the operation.
+        """
         try:
-            resource_name = f"projects/{self._project_id}/secrets/{name}/versions/latest"
+            resource_name = (
+                f"projects/{self._project_id}/secrets/{name}/versions/latest"
+            )
             resp = self._client.access_secret_version(name=resource_name)
             return resp.payload.data.decode("utf-8")
         except Exception as exc:
@@ -103,6 +173,8 @@ class GcpSecretsManagerBackend(ISecretsBackend):
 
 
 class AzureKeyVaultBackend(ISecretsBackend):
+    """Represents the AzureKeyVaultBackend class."""
+
     def __init__(
         self,
         vault_url: str,
@@ -110,8 +182,18 @@ class AzureKeyVaultBackend(ISecretsBackend):
         client_secret: Optional[str],
         tenant_id: Optional[str],
     ) -> None:
+        """Execute __init__ operation.
+
+        Args:
+            vault_url: The vault_url parameter.
+            client_id: The client_id parameter.
+            client_secret: The client_secret parameter.
+            tenant_id: The tenant_id parameter.
+        """
         if SecretClient is None or ClientSecretCredential is None:
-            raise RuntimeError("azure-identity and azure-keyvault-secrets are not installed")
+            raise RuntimeError(
+                "azure-identity and azure-keyvault-secrets are not installed"
+            )
         if client_id and client_secret and tenant_id:
             credential = ClientSecretCredential(
                 tenant_id=tenant_id,
@@ -120,10 +202,19 @@ class AzureKeyVaultBackend(ISecretsBackend):
             )
         else:
             from azure.identity import DefaultAzureCredential
+
             credential = DefaultAzureCredential()
         self._client = SecretClient(vault_url=vault_url, credential=credential)
 
     async def get_secret(self, name: str) -> Optional[str]:
+        """Execute get_secret operation.
+
+        Args:
+            name: The name parameter.
+
+        Returns:
+            The result of the operation.
+        """
         try:
             secret = self._client.get_secret(name)
             return secret.value
@@ -133,6 +224,11 @@ class AzureKeyVaultBackend(ISecretsBackend):
 
 
 def build_secrets_backend() -> Optional[ISecretsBackend]:
+    """Execute build_secrets_backend operation.
+
+    Returns:
+        The result of the operation.
+    """
     if SecretsConfiguration is None:
         logger.debug("SecretsConfiguration not available (configurations.secrets).")
         return None
