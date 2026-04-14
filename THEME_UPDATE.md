@@ -1,7 +1,9 @@
 # FastMVC Dashboards Theme Update Guide
 
 ## Overview
+
 All dashboards need to be updated to use a consistent **monochrome flat dark/light theme** that matches:
+
 - `static/launch.html`
 - `static/swagger.html`
 - `docs-site`
@@ -119,13 +121,15 @@ Add before closing `</body>` tag:
 
 ## Design Changes
 
-### Remove:
+### Remove
+
 - Gradients (`background: linear-gradient(...)`)
 - Glass effects (`backdrop-filter: blur(...)`)
 - Glow shadows (`box-shadow: 0 0 40px...`)
 - Radial gradient backgrounds
 
-### Replace with:
+### Replace with
+
 - Flat colors using CSS variables
 - Subtle borders (`border: 1px solid var(--border)`)
 - Simple hover states with border color changes
